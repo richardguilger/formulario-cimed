@@ -257,9 +257,9 @@ const Q = [
 
   {id:'edu',   b:'1. Perfil Demográfico',  n:'1.3', type:'radio', req:true,
    text:'Nível de escolaridade',
-   opts:['Ensino fundamental incompleto ou completo','Ensino médio incompleto ou completo',
-         'Ensino superior incompleto','Ensino superior completo',
-         'Pós-graduação (especialização, mestrado ou doutorado)']},
+   opts:['Ensino fundamental','Ensino médio',
+         'Superior incompleto','Superior completo',
+         'Pós-graduação']},
 
   {id:'state', b:'1. Perfil Demográfico',  n:'1.4', type:'radio', req:true,
    text:'Em qual região do estado de São Paulo você reside?',
@@ -493,7 +493,7 @@ async function showThanks(){
   } catch (err) {
     title.innerText = 'Ops, um erro ocorreu!';
     title.style.color = '#ff6b6b';
-    p.innerHTML = 'Não conseguimos registrar suas respostas no banco de dados da nuvem. Verifique sua conexão com a internet ou as permissões da tabela no Supabase.';
+    p.innerHTML = `O banco de dados recusou a inserção:<br><br><strong>${err.message || JSON.stringify(err)}</strong><br><br>Geralmente isso ocorre porque você não rodou o código SQL de criação da tabela lá no painel do Supabase.`;
   }
 }
 function showErr(){ document.getElementById('q-err').classList.add('show'); }
