@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pesquisa Acadêmica — Grupo Cimed</title>
+<meta name="description" content="Pesquisa acadêmica sobre percepção de marca e hábitos de consumo do Grupo Cimed."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f16;--surface:#161a24;--surface2:#1d2130;--border:#252c3d;
+  --text:#edf0f9;--muted:#60718a;--primary:#e8b800;--primary-dim:rgba(232,184,0,.13);
+  --success:#3ecf8e;--danger:#ff5f5f;--r:11px;
+}
+html{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse 90% 50% at 50% -5%,rgba(232,184,0,.06) 0%,transparent 65%)}
+
+/* ── PROGRESS ──────────────────────────────────────── */
+#prog-wrap{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:300}
+#prog{height:100%;background:linear-gradient(90deg,var(--primary),#f5d000);
+  border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1);width:0%}
+
+/* ── SCREENS ───────────────────────────────────────── */
+.screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:48px 20px}
+.screen.hidden{display:none!important}
+
+/* ── INTRO ─────────────────────────────────────────── */
+.intro-card{max-width:560px;width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:52px 44px;box-shadow:0 28px 80px rgba(0,0,0,.55);
+  animation:fadeUp .45s ease both}
+@media(max-width:520px){.intro-card{padding:36px 24px}}
+.intro-badge{display:inline-flex;align-items:center;gap:8px;background:var(--primary-dim);
+  color:var(--primary);border-radius:999px;padding:6px 16px;font-size:11.5px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:24px}
+.intro-title{font-size:2.6rem;font-weight:900;line-height:1.1;
+  background:linear-gradient(130deg,#fff 35%,var(--primary));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.intro-sub{font-size:1rem;color:var(--muted);font-weight:500;margin-bottom:26px}
+.intro-info{background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;font-size:13.5px;color:var(--muted);line-height:1.72;margin-bottom:32px}
+.intro-info strong{color:var(--text)}
+.btn-start{width:100%;background:var(--primary);color:#0d0f16;border:none;border-radius:var(--r);
+  font-family:inherit;font-size:15px;font-weight:700;padding:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:background .18s,transform .15s,box-shadow .18s}
+.btn-start:hover{background:#d4a800;transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,184,0,.35)}
+.intro-foot{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;opacity:.65}
+
+/* ── QUESTION SCREEN ───────────────────────────────── */
+#q-screen{flex-direction:column;align-items:center;padding-top:52px;padding-bottom:110px}
+.q-wrap{width:100%;max-width:620px}
+
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:38px}
+.block-badge{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  border-radius:999px;padding:4px 14px;white-space:nowrap}
+.q-counter{font-size:12px;color:var(--muted);margin-left:auto;white-space:nowrap}
+
+.q-text{font-size:1.75rem;font-weight:800;line-height:1.28;color:var(--text);margin-bottom:8px}
+@media(max-width:500px){.q-text{font-size:1.3rem}}
+.q-hint{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:26px}
+.q-optional{font-size:12px;color:var(--muted);font-weight:400}
+
+/* options */
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:center;gap:13px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r);padding:13px 16px;
+  cursor:pointer;transition:border-color .15s,background .15s,transform .1s;
+  font-size:14px;font-weight:500;user-select:none}
+.opt:active{transform:scale(.985)}
+.opt:hover{border-color:var(--primary);background:var(--primary-dim)}
+.opt.selected{border-color:var(--primary);background:var(--primary-dim)}
+.dot{width:17px;height:17px;border-radius:50%;border:2px solid var(--muted);flex-shrink:0;
+  position:relative;transition:border-color .15s,background .15s}
+.opt.selected .dot{border-color:var(--primary);background:var(--primary)}
+.opt.selected .dot::after{content:'';position:absolute;inset:3px;background:var(--bg);border-radius:50%}
+.sq{width:17px;height:17px;border-radius:5px;border:2px solid var(--muted);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s}
+.opt.selected .sq{border-color:var(--primary);background:var(--primary)}
+.opt.selected .sq::after{content:'✓';font-size:11px;color:var(--bg);font-weight:900}
+
+/* select */
+.q-select{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:inherit;font-size:14px;padding:13px 16px;outline:none;
+  cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2360718a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;
+  transition:border-color .15s}
+.q-select:focus{border-color:var(--primary);outline:none}
+.q-select option{background:var(--surface2)}
+
+/* textarea */
+.q-ta{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:inherit;font-size:14px;padding:13px 16px;
+  resize:vertical;min-height:108px;outline:none;transition:border-color .15s}
+.q-ta:focus{border-color:var(--primary)}
+.q-ta::placeholder{color:var(--muted)}
+
+/* scale */
+.scale-wrap{display:flex;flex-direction:column;gap:12px}
+.scale-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.scale-row{display:flex;gap:7px;flex-wrap:wrap}
+.sc-btn{flex:1;min-width:38px;padding:13px 4px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r);color:var(--text);
+  cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;
+  transition:border-color .15s,background .15s}
+.sc-btn:hover{border-color:var(--primary)}
+.sc-btn.selected{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
+.sc-btn.nps{min-width:30px;padding:11px 2px;font-size:12.5px}
+
+/* chips */
+.chips-wrap{display:flex;flex-wrap:wrap;gap:9px}
+.chip{background:var(--surface);border:1.5px solid var(--border);border-radius:999px;
+  padding:8px 17px;cursor:pointer;font-size:13px;font-weight:500;user-select:none;
+  transition:border-color .15s,background .15s,color .15s}
+.chip:hover{border-color:var(--primary)}
+.chip.selected{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
+.chip-count{font-size:11.5px;color:var(--muted);margin-top:10px}
+
+/* vis cards */
+.vis-wrap{display:flex;gap:12px;flex-wrap:wrap}
+.vc{flex:1;min-width:150px;background:var(--surface);border:2px solid var(--border);
+  border-radius:16px;padding:22px 16px;cursor:pointer;text-align:center;
+  transition:border-color .15s,background .15s;user-select:none}
+.vc:hover{border-color:var(--primary)}
+.vc.selected{border-color:var(--primary);background:var(--primary-dim)}
+.vc-box-wrap{position:relative;width:100%;height:140px;margin-bottom:14px}
+.vc-box, .vc-img-placeholder{width:100%;height:100%;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;background:var(--surface2);
+  font-size:10px;font-weight:700;text-align:center;line-height:1.4;padding:12px;
+  border:2px dashed var(--border);color:var(--muted);text-transform:lowercase}
+.vc-img{width:100%;height:100%;object-fit:contain;border-radius:12px;display:block}
+.opt.selected .vc-box, .opt.selected .vc-img-placeholder, .vc.selected .vc-img-placeholder{border-color:var(--primary);color:var(--primary)}
+.vc-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.vc-sub{font-size:10.5px;color:var(--muted)}
+
+/* rank */
+.rank-wrap{display:flex;flex-direction:column;gap:9px}
+.rank-item{display:flex;align-items:center;gap:11px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;
+  font-size:13.5px;font-weight:500;user-select:none;transition:border-color .15s,opacity .15s;
+  touch-action:none}
+.rank-item.dragging{opacity:.45;border-color:var(--primary)}
+.rank-item.over{border-color:var(--primary);background:var(--primary-dim)}
+.rk-num{width:26px;height:26px;border-radius:50%;background:var(--primary);color:var(--bg);
+  font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rk-arrows{display:flex;gap:5px;margin-left:auto}
+.rk-arrow{background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);cursor:pointer;font-size:13px;padding:4px 9px;
+  transition:border-color .15s,color .15s;font-family:inherit}
+.rk-arrow:hover{border-color:var(--primary);color:var(--primary)}
+.rk-handle{color:var(--muted);font-size:18px;line-height:1;cursor:grab;margin-left:6px}
+.rk-handle:active{cursor:grabbing}
+
+/* error */
+.err{display:none;align-items:center;gap:7px;margin-top:16px;
+  font-size:12.5px;color:var(--danger);font-weight:500}
+.err.show{display:flex}
+
+/* nav bar */
+.nav{position:fixed;bottom:0;left:0;right:0;padding:16px 24px 26px;
+  background:linear-gradient(to top,var(--bg) 65%,transparent);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:200}
+.btn-back{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);
+  color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;
+  padding:12px 22px;cursor:pointer;display:flex;align-items:center;gap:6px;
+  transition:border-color .15s,color .15s}
+.btn-back:hover{border-color:var(--primary);color:var(--text)}
+.btn-next{background:var(--primary);color:#0d0f16;border:none;border-radius:var(--r);
+  font-family:inherit;font-size:14px;font-weight:700;padding:12px 28px;
+  cursor:pointer;display:flex;align-items:center;gap:7px;
+  box-shadow:0 4px 18px rgba(232,184,0,.28);transition:all .15s}
+.btn-next:hover{background:#d4a800;transform:translateY(-1px);box-shadow:0 7px 22px rgba(232,184,0,.38)}
+
+/* thanks */
+.thanks-card{max-width:480px;width:100%;text-align:center;background:var(--surface);
+  border:1px solid var(--border);border-radius:20px;padding:60px 44px;
+  box-shadow:0 28px 80px rgba(0,0,0,.55);animation:fadeUp .45s ease both}
+.thanks-emoji{font-size:4.2rem;margin-bottom:20px}
+.thanks-title{font-size:2rem;font-weight:900;margin-bottom:10px}
+.thanks-bar{width:52px;height:4px;background:var(--success);border-radius:999px;margin:14px auto}
+.thanks-p{font-size:14px;color:var(--muted);line-height:1.68;max-width:340px;margin:0 auto}
+.thanks-foot{font-size:11px;color:var(--muted);margin-top:20px;opacity:.6}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideR{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideL{from{opacity:0;transform:translateX(-50px)}to{opacity:1;transform:translateX(0)}}
+.anim-r{animation:slideR .32s cubic-bezier(.4,0,.2,1) both}
+.anim-l{animation:slideL .32s cubic-bezier(.4,0,.2,1) both}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS -->
+<div id="prog-wrap"><div id="prog"></div></div>
+
+<!-- INTRO -->
+<div id="s-intro" class="screen">
+  <div class="intro-card">
+    <div class="intro-badge">🔍 Pesquisa de Percepção</div>
+    <div class="intro-title">Grupo Cimed</div>
+    <div class="intro-sub">Marca · Produto · Consumo</div>
+    <div class="intro-info">
+      Você foi convidado(a) a participar de uma pesquisa acadêmica sobre <strong>percepção de marca</strong> e
+      <strong>hábitos de consumo</strong> relacionados ao Grupo Cimed.<br/><br/>
+      Suas respostas são <strong>anônimas</strong> e levam cerca de <strong>8 minutos</strong>.
+      Não há respostas certas ou erradas.
+    </div>
+    <button class="btn-start" onclick="startSurvey()">Começar pesquisa →</button>
+    <div class="intro-foot">Centro Universitário SENAC · Administração · 2026</div>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div id="s-q" class="screen hidden">
+  <div class="q-wrap">
+    <div class="q-meta" id="q-meta"></div>
+    <div id="q-body"></div>
+    <div class="err" id="q-err">⚠ Por favor, responda esta pergunta para continuar.</div>
+  </div>
+  <nav class="nav">
+    <button class="btn-back" onclick="goBack()">← Voltar</button>
+    <button class="btn-next" id="btn-next" onclick="goNext()">Próxima →</button>
+  </nav>
+</div>
+
+<!-- THANKS -->
+<div id="s-thanks" class="screen hidden">
+  <div class="thanks-card">
+    <div class="thanks-emoji">💛</div>
+    <div class="thanks-title">Muito obrigado!</div>
+    <div class="thanks-bar"></div>
+    <p class="thanks-p">Suas respostas contribuem diretamente para esta pesquisa acadêmica sobre percepção de marcas farmacêuticas no Brasil.</p>
+    <div class="thanks-foot">Centro Universitário SENAC · Administração · 2026</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ════════════════════════════════════════════════════
+//  QUESTÕES
+// ════════════════════════════════════════════════════
+const BLOCK_COLORS = {'1':'#8b5cf6','2':'#e8b800','3':'#3ecf8e','4':'#ec4899','5':'#06b6d4','6':'#f97316'};
+const getBC = b => BLOCK_COLORS[b.match(/^(\d+)/)?.[1]] || '#e8b800';
+
+const Q = [
+  // ── BLOCO 1 ──────────────────────────────────────
+  {id:'age',   b:'1. Perfil Demográfico',  n:'1.1', type:'radio', req:true,
+   text:'Qual é a sua faixa etária?',
+   opts:['18 a 24 anos','25 a 34 anos','35 a 44 anos','45 a 59 anos','60 anos ou mais']},
+
+  {id:'gender', b:'1. Perfil Demográfico', n:'1.2', type:'radio', req:true,
+   text:'Gênero',
+   opts:['Feminino','Masculino','Não-binário / gênero fluido','Prefiro não informar']},
+
+  {id:'edu',   b:'1. Perfil Demográfico',  n:'1.3', type:'radio', req:true,
+   text:'Nível de escolaridade',
+   opts:['Ensino fundamental incompleto ou completo','Ensino médio incompleto ou completo',
+         'Ensino superior incompleto','Ensino superior completo',
+         'Pós-graduação (especialização, mestrado ou doutorado)']},
+
+  {id:'state', b:'1. Perfil Demográfico',  n:'1.4', type:'radio', req:true,
+   text:'Em qual região do estado de São Paulo você reside?',
+   opts:['Norte', 'Sul', 'Leste', 'Oeste', 'Centro', 'Litoral', 'Interior', 'Não resido em São Paulo']},
+
+  {id:'income',b:'1. Perfil Demográfico',  n:'1.5', type:'radio', req:true,
+   text:'Qual é a sua renda familiar mensal aproximada?',
+   hint:'Salário mínimo atual: R$ 1.518 (2025)',
+   opts:['Até 1 salário mínimo (até R$ 1.518)',
+         'De 1 a 2 salários mínimos (R$ 1.518 a R$ 3.036)',
+         'De 2 a 4 salários mínimos (R$ 3.036 a R$ 6.072)',
+         'De 4 a 8 salários mínimos (R$ 6.072 a R$ 12.144)',
+         'Acima de 8 salários mínimos (acima de R$ 12.144)',
+         'Prefiro não informar']},
+
+  // ── BLOCO 2 ──────────────────────────────────────
+  {id:'know_cimed', b:'2. Conhecimento da Marca Cimed', n:'2.1', type:'radio', req:true,
+   text:'Você conhece ou já ouviu falar da Cimed?',
+   opts:['Sim, conheço bem','Já ouvi falar, mas conheço pouco','Não conheço']},
+
+  {id:'how_cimed', b:'2. Conhecimento da Marca Cimed', n:'2.2', type:'check', req:true,
+   text:'Como você ficou sabendo da Cimed?',
+   hint:'Selecione todas as opções que se aplicam.',
+   opts:['Farmácia (produto na prateleira)','TV / comerciais',
+         'Redes sociais (Instagram, TikTok, YouTube etc.)','BBB / programas de TV',
+         'Patrocínio esportivo (Seleção, times de futebol, vôlei)',
+         'Indicação de amigos ou familiares','Indicação médica ou farmacêutica','Outro'],
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'cimed_mind', b:'2. Conhecimento da Marca Cimed', n:'2.3', type:'text', req:true,
+   text:'Quando você pensa na marca Cimed, o que vem à sua mente?',
+   hint:'Escreva livremente — palavras, imagens, sensações ou associações.',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'generic_brand', b:'2. Conhecimento da Marca Cimed', n:'2.4', type:'radio', req:true,
+   text:'Quando você pensa em medicamentos genéricos, qual marca vem à sua mente espontaneamente?',
+   opts:['Medley','Neo Química','EMS','Cimed','Eurofarma','Outra','Nenhuma em especial']},
+
+  {id:'rank_gen', b:'2. Conhecimento da Marca Cimed', n:'2.5', type:'rank', req:true,
+   text:'Ordene as marcas de acordo com sua preferência em medicamentos genéricos.',
+   hint:'Use as setas ou arraste — 1º = maior preferência.',
+   items:['Medley','Neo Química','EMS','Cimed','Eurofarma'],
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  // ── BLOCO 3 ──────────────────────────────────────
+  {id:'otc_prod', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.1', type:'chips', req:true,
+   text:'Quais destes produtos Cimed você conhece ou já utilizou?',
+   hint:"Selecione todos que se aplicam. Caso nenhum, marque 'Nenhum'.",
+   opts:['Cimegripe','Lavitan','Loratamed','Dorimed','Nimesulida Cimed','Dipirona Cimed','Amoxicilina Cimed','Nenhum'],
+   noneOpt:'Nenhum',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'otc_vis', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.2', type:'viscard', req:true,
+   text:'Qual identidade visual de medicamento chama mais atenção para você na prateleira?',
+   hint:'Selecione a embalagem que mais te atrai visualmente.',
+   cards:[
+     {v:'Cimed',       name:'Cimed',       sub:'Cimed',      img:'img_cimegripe.png'},
+     {v:'Resfenol',    name:'Resfenol',    sub:'Hertz',      img:'img_resfenol.png'},
+     {v:'Benegrip',    name:'Benegrip Multi', sub:'Brainfarma',  img:'img_benegrip.png'},
+     {v:'Coristina D', name:'Coristina D PRO', sub:'Hypera',     img:'img_coristina.png'},
+     {v:'Naldecon',    name:'Naldecon Pack',  sub:'Reckitt',    img:'img_naldecon.png'}],
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'lik_price', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.3a', type:'scale',req:true,
+   text:'Os produtos Cimed têm preço acessível.',
+   hint:'1 = Discordo totalmente  ·  5 = Concordo totalmente',
+   min:1,max:5,lMin:'Discordo totalmente',lMax:'Concordo totalmente',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'lik_qual', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.3b', type:'scale',req:true,
+   text:'Confio na qualidade dos produtos Cimed.',
+   hint:'1 = Discordo totalmente  ·  5 = Concordo totalmente',
+   min:1,max:5,lMin:'Discordo totalmente',lMax:'Concordo totalmente',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'lik_pack', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.3c', type:'scale',req:true,
+   text:'Reconheço o produto Cimed pela embalagem antes de ler o nome.',
+   hint:'1 = Discordo totalmente  ·  5 = Concordo totalmente',
+   min:1,max:5,lMin:'Discordo totalmente',lMax:'Concordo totalmente',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  {id:'lik_pref', b:'3. Linha de Medicamentos Cimed (OTC)', n:'3.3d', type:'scale',req:true,
+   text:'Prefiro Cimed a medicamentos de referência (ex.: Aspirina, Tylenol).',
+   hint:'1 = Discordo totalmente  ·  5 = Concordo totalmente',
+   min:1,max:5,lMin:'Discordo totalmente',lMax:'Concordo totalmente',
+   skip:a => a.know_cimed === 'Não conheço'},
+
+  // ── BLOCO 4 ──────────────────────────────────────
+  {id:'know_carmed', b:'4. Carmed — Linha de Cosméticos', n:'4.1', type:'radio', req:true,
+   text:'Você conhece ou já utilizou algum produto da Carmed?',
+   opts:['Sim, uso regularmente','Já usei, mas não uso mais','Conheço, mas nunca usei','Não conheço']},
+
+  {id:'how_carmed', b:'4. Carmed — Linha de Cosméticos', n:'4.2', type:'chips', req:true,
+   text:'Como você ficou sabendo da Carmed?',
+   opts:['TikTok','Instagram','Farmácia','Amigos / família','Parceria com Fini','Influenciador(a)','TV','Outro'],
+   skip:a => a.know_carmed === 'Não conheço'},
+
+  {id:'fini_inf', b:'4. Carmed — Linha de Cosméticos', n:'4.3', type:'scale', req:true,
+   text:'A parceria Carmed × Fini influenciou sua vontade de comprar o produto?',
+   min:1,max:5,lMin:'Não influenciou nada',lMax:'Influenciou muito',
+   skip:a => a.know_carmed === 'Não conheço'},
+
+  {id:'carmed_vis', b:'4. Carmed — Linha de Cosméticos', n:'4.4', type:'viscard', req:true,
+   text:'Comparando hidratantes labiais, qual você prefere visualmente?',
+   hint:'Selecione o produto que mais te atrai visualmente.',
+   cards:[
+     {v:'Carmed',  name:'Carmed',  sub:'Cimed',      img:'img_carmed.png'},
+     {v:'Labello', name:'Labello', sub:'Beiersdorf', img:'img_labello.jpg'},
+     {v:'Nivea',   name:'Nivea',   sub:'Beiersdorf', img:'img_nivea.png'},
+     {v:'Bepantol',name:'Bepantol Derma', sub:'Bayer', img:'img_bepantol.png'}],
+   skip:a => a.know_carmed === 'Não conheço'},
+
+  {id:'rank_lip', b:'4. Carmed — Linha de Cosméticos', n:'4.5', type:'rank', req:true,
+   text:'Ordene os fatores que mais influenciam sua compra de um hidratante labial.',
+   hint:'Use as setas ou arraste — 1º = fator mais importante.',
+   items:['Preço','Sabor / aroma','Marca','Embalagem / design','Indicação de amigos ou influenciadores','Edição limitada / collab'],
+   skip:a => a.know_carmed === 'Não conheço'},
+
+  // ── BLOCO 5 ──────────────────────────────────────
+  {id:'has_kids', b:'5. Linha de Higiene Pessoal', n:'5.1', type:'radio', req:true,
+   text:'Você tem filhos ou cuida de crianças pequenas (até 5 anos)?',
+   opts:['Sim','Não']},
+
+  {id:'know_jm', b:'5. Linha de Higiene Pessoal', n:'5.2', type:'radio', req:true,
+   text:'Você conhece a linha João e Maria (produtos infantis da Cimed)?',
+   opts:['Sim, já usei','Conheço, mas nunca usei','Não conheço']},
+
+  {id:'baby_vis', b:'5. Linha de Higiene Pessoal', n:'5.3', type:'viscard', req:true,
+   text:'Qual transmite mais confiança visualmente para baby care?',
+   hint:"Selecione a marca que mais transmite confiança para você.",
+   cards:[
+     {v:'João e Maria',    name:'João e Maria',    sub:'Cimed',             img:'img_joao_maria.png'},
+     {v:"Johnson's",       name:"Johnson's",        sub:'Johnson & Johnson', img:'img_johnsons.png'},
+     {v:'Huggies',         name:'Huggies',         sub:'Kimberly-Clark',    img:'img_huggies.png'},
+     {v:'Granado',         name:'Granado',         sub:'Granado Pharmácias', img:'img_granado.png'}]},
+
+  {id:'know_super', b:'5. Linha de Higiene Pessoal', n:'5.4', type:'radio', req:true,
+   text:'Você conhece ou já usou a marca Super (higiene bucal e autocuidado da Cimed)?',
+   opts:['Sim, já usei','Conheço pelo BBB ou redes sociais, mas nunca usei','Não conheço']},
+
+  {id:'oral_vis', b:'5. Linha de Higiene Pessoal', n:'5.5', type:'viscard', req:true,
+   text:'Qual você prefere visualmente em higiene bucal?',
+   hint:'Selecione a marca que mais te atrai visualmente.',
+   cards:[
+     {v:'Super',   name:'Super',   sub:'Cimed',             img:'img_super.png'},
+     {v:'Colgate', name:'Colgate', sub:'Colgate-Palmolive', img:'img_colgate.png'},
+     {v:'Oral-B',  name:'Oral-B',  sub:'P&G',              img:'img_oralb.png'},
+     {v:'Sorriso', name:'Sorriso', sub:'Colgate-Palmolive', img:'img_sorriso.png'},
+     {v:'Sensodyne',name:'Sensodyne',sub:'Haleon',          img:'img_sensodyne.png'}]},
+
+  {id:'bbb_super', b:'5. Linha de Higiene Pessoal', n:'5.6', type:'scale', req:true,
+   text:'O patrocínio da Super no BBB 2026 influenciou sua percepção sobre a marca?',
+   min:1,max:5,lMin:'Não influenciou',lMax:'Influenciou muito'},
+
+  // ── BLOCO 6 ──────────────────────────────────────
+  {id:'adj', b:'6. Percepção Geral do Grupo Cimed', n:'6.1', type:'chips', req:true,
+   text:'Qual dos seguintes adjetivos melhor descreve a Cimed para você?',
+   hint:'Selecione até 3 opções.',
+   opts:['Inovadora','Acessível','Confiável','Divertida','Moderna','Popular','Barata','Desconhecida','Tradicional'],
+   maxSel:3},
+
+  {id:'digital', b:'6. Percepção Geral do Grupo Cimed', n:'6.2', type:'scale', req:true,
+   text:'Como você avalia a presença digital da Cimed (redes sociais, conteúdo, influenciadores)?',
+   min:1,max:5,lMin:'Muito fraca',lMax:'Muito forte'},
+
+  {id:'nps', b:'6. Percepção Geral do Grupo Cimed', n:'6.3', type:'scale', req:true,
+   text:'Você recomendaria algum produto da Cimed a um amigo ou familiar?',
+   hint:'0 = Definitivamente não  ·  10 = Definitivamente sim (NPS)',
+   min:0,max:10,lMin:'0 — Não recomendaria',lMax:'10 — Recomendaria',nps:true},
+
+  {id:'rank_trust', b:'6. Percepção Geral do Grupo Cimed', n:'6.4', type:'rank', req:true,
+   text:'Ordene os fatores que mais influenciam sua confiança em uma marca farmacêutica.',
+   hint:'Use as setas ou arraste — 1º = mais importante.',
+   items:['Preço acessível','Reconhecimento da marca','Indicação médica','Presença nas redes sociais','Disponibilidade na farmácia','Patrocínio esportivo ou cultural']}
+];
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let answers = {}, rankOrders = {}, cur = 0;
+
+function visible(){ return Q.filter(q => !q.skip || !q.skip(answers)); }
+function isAnswered(q){
+  if(!q.req || q.optional) return true;
+  if(q.type==='rank') return true;
+  const a = answers[q.id];
+  if(a===undefined||a===null||a==='') return false;
+  if(Array.isArray(a) && a.length===0) return false;
+  return true;
+}
+
+// ════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════
+function startSurvey(){
+  show('s-q'); hide('s-intro');
+  cur=0; render(1);
+}
+function goNext(){
+  const qs=visible(), q=qs[cur];
+  if(!isAnswered(q)){ showErr(); return; }
+  hideErr();
+  if(cur<qs.length-1){ cur++; render(1); }
+  else{ showThanks(); }
+}
+function goBack(){
+  hideErr();
+  if(cur>0){ cur--; render(-1); }
+  else{ show('s-intro'); hide('s-q'); }
+}
+async function showThanks(){
+  hide('s-q'); show('s-thanks');
+  window.scrollTo({top:0,behavior:'smooth'});
+  
+  const title = document.querySelector('.thanks-title');
+  const p = document.querySelector('.thanks-p');
+  
+  title.innerText = 'Salvando suas respostas...';
+  p.innerHTML = 'Aguarde um instante enquanto conectamos com o servidor.';
+  
+  try {
+    const supabaseUrl = 'https://nnntghaltqsbzwkuohzn.supabase.co/';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubnRnaGFsdHFzYnp3a3VvaHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzEzNDQsImV4cCI6MjA5MjIwNzM0NH0.6wjDPFa8LgHLBxYH_OAxCUhaArX1m9VmNcGis5INMdA';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const { error } = await supabase.from('responses').insert([{ answers }]);
+    if (error) throw error;
+    
+    title.innerText = 'Muito obrigado!';
+    p.innerHTML = 'Suas respostas foram salvas com sucesso em nosso banco de dados na nuvem. Elas contribuem diretamente para esta pesquisa acadêmica sobre percepção de marcas farmacêuticas no Brasil.';
+  } catch (err) {
+    title.innerText = 'Ops, um erro ocorreu!';
+    title.style.color = '#ff6b6b';
+    p.innerHTML = 'Não conseguimos registrar suas respostas no banco de dados da nuvem. Verifique sua conexão com a internet ou as permissões da tabela no Supabase.';
+  }
+}
+function showErr(){ document.getElementById('q-err').classList.add('show'); }
+function hideErr(){ document.getElementById('q-err').classList.remove('show'); }
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
+
+// ════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════
+function render(dir){
+  const qs=visible(), q=qs[cur], total=qs.length;
+  const pct=Math.round(((cur+1)/total)*100);
+
+  // progress
+  document.getElementById('prog').style.width=pct+'%';
+
+  // next label
+  document.getElementById('btn-next').innerHTML = cur===total-1 ? 'Enviar ✓' : 'Próxima →';
+
+  // meta
+  const col=getBC(q.b);
+  document.getElementById('q-meta').innerHTML=`
+    <span class="block-badge" style="background:${col}22;color:${col}">${q.b}</span>
+    <span class="q-counter">${cur+1} de ${total}</span>`;
+
+  // body
+  const body=document.getElementById('q-body');
+  body.className = dir===1?'anim-r':'anim-l';
+  body.innerHTML = buildQ(q);
+
+  // attach
+  attach(q);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function buildQ(q){
+  const opt = q.optional?`<span class="q-optional">(opcional)</span>`:'';
+  let h=`<div class="q-text">${q.text} ${opt}</div>`;
+  if(q.hint) h+=`<div class="q-hint">${q.hint}</div>`;
+  if(q.type==='radio')   h+=buildRadio(q);
+  if(q.type==='check')   h+=buildCheck(q);
+  if(q.type==='select')  h+=buildSelect(q);
+  if(q.type==='text')    h+=buildText(q);
+  if(q.type==='scale')   h+=buildScale(q);
+  if(q.type==='chips')   h+=buildChips(q);
+  if(q.type==='viscard') h+=buildVis(q);
+  if(q.type==='rank')    h+=buildRank(q);
+  return h;
+}
+
+function buildRadio(q){
+  return `<div class="opts" data-qid="${q.id}" data-t="radio">`+
+    q.opts.map(o=>`<div class="opt${answers[q.id]===o?' selected':''}" data-v="${ea(o)}"><span class="dot"></span>${o}</div>`).join('')+
+  `</div>`;
+}
+function buildCheck(q){
+  const sel=answers[q.id]||[];
+  return `<div class="opts" data-qid="${q.id}" data-t="check">`+
+    q.opts.map(o=>`<div class="opt${sel.includes(o)?' selected':''}" data-v="${ea(o)}"><span class="sq"></span>${o}</div>`).join('')+
+  `</div>`;
+}
+function buildSelect(q){
+  const v=answers[q.id]||'';
+  return `<select class="q-select" id="sel-${q.id}" onchange="setA('${q.id}',this.value);hideErr()">
+    <option value="">Selecione...</option>
+    ${q.opts.map(o=>`<option${v===o?' selected':''}>${o}</option>`).join('')}
+  </select>`;
+}
+function buildText(q){
+  return `<textarea class="q-ta" id="ta-${q.id}" placeholder="${q.ph||''}"
+    oninput="setA('${q.id}',this.value.trim());hideErr()">${answers[q.id]||''}</textarea>`;
+}
+function buildScale(q){
+  let btns='';
+  for(let v=q.min;v<=q.max;v++){
+    btns+=`<button type="button" class="sc-btn${q.nps?' nps':''}${answers[q.id]===v?' selected':''}"
+      data-qid="${q.id}" data-v="${v}" onclick="pickScale('${q.id}',${v},this)">${v}</button>`;
+  }
+  return `<div class="scale-wrap">
+    <div class="scale-lbl"><span>${q.lMin||''}</span><span>${q.lMax||''}</span></div>
+    <div class="scale-row">${btns}</div>
+  </div>`;
+}
+function buildChips(q){
+  const sel=answers[q.id]||[];
+  let h=`<div class="chips-wrap" data-qid="${q.id}">`+
+    q.opts.map(o=>`<div class="chip${sel.includes(o)?' selected':''}" data-v="${ea(o)}">${o}</div>`).join('')+
+  `</div>`;
+  if(q.maxSel) h+=`<div class="chip-count" id="cnt-${q.id}">${sel.length} / ${q.maxSel} selecionados</div>`;
+  return h;
+}
+function buildVis(q){
+  return `<div class="vis-wrap" data-qid="${q.id}">`+
+    q.cards.map(c=>`<div class="vc${answers[q.id]===c.v?' selected':''}" data-v="${ea(c.v)}">`+
+      `<div class="vc-box-wrap">` +
+        (c.img 
+          ? `<img class="vc-img" src="${c.img}" alt="${c.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+             <div class="vc-img-placeholder" style="display:none">${c.img}</div>`
+          : `<div class="vc-img-placeholder">${c.img || 'sem imagem'}</div>`
+        ) +
+      `</div>` +
+      `<div class="vc-name">${c.name}</div>
+    </div>`).join('')+
+  `</div>`;
+}
+function buildRank(q){
+  if(!rankOrders[q.id]){ rankOrders[q.id]=[...q.items]; answers[q.id]=[...q.items]; }
+  const order=rankOrders[q.id];
+  return `<div class="rank-wrap" id="rk-${q.id}">`+
+    order.map((it,i)=>`<div class="rank-item" draggable="true" data-ri="${ea(it)}" data-rqid="${q.id}">
+      <div class="rk-num">${i+1}</div>
+      <span style="flex:1">${it}</span>
+      <div class="rk-arrows">
+        <button class="rk-arrow" data-d="-1">↑</button>
+        <button class="rk-arrow" data-d="1">↓</button>
+      </div>
+      <span class="rk-handle">⠿</span>
+    </div>`).join('')+
+  `</div>`;
+}
+function ea(s){ return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ════════════════════════════════════════════════════
+//  EVENT ATTACHMENT
+// ════════════════════════════════════════════════════
+function attach(q){
+  // radio
+  if(q.type==='radio'){
+    document.querySelectorAll(`.opts[data-qid="${q.id}"] .opt`).forEach(el=>{
+      el.addEventListener('click',()=>{
+        setA(q.id, el.dataset.v);
+        document.querySelectorAll(`.opts[data-qid="${q.id}"] .opt`).forEach(e=>e.classList.remove('selected'));
+        el.classList.add('selected');
+        hideErr();
+        setTimeout(goNext, 360);
+      });
+    });
+  }
+  // checkbox
+  if(q.type==='check'){
+    document.querySelectorAll(`.opts[data-qid="${q.id}"] .opt`).forEach(el=>{
+      el.addEventListener('click',()=>{
+        if(!answers[q.id]) answers[q.id]=[];
+        const v=el.dataset.v, idx=answers[q.id].indexOf(v);
+        if(idx>-1){ answers[q.id].splice(idx,1); el.classList.remove('selected'); }
+        else{ answers[q.id].push(v); el.classList.add('selected'); }
+        hideErr();
+      });
+    });
+  }
+  // chips
+  if(q.type==='chips'){
+    document.querySelectorAll(`.chips-wrap[data-qid="${q.id}"] .chip`).forEach(el=>{
+      el.addEventListener('click',()=>{
+        if(!answers[q.id]) answers[q.id]=[];
+        const v=el.dataset.v;
+        if(v===q.noneOpt){
+          document.querySelectorAll(`.chips-wrap[data-qid="${q.id}"] .chip`).forEach(c=>c.classList.remove('selected'));
+          el.classList.add('selected'); answers[q.id]=[v];
+        } else {
+          if(q.noneOpt){
+            document.querySelectorAll(`.chips-wrap[data-qid="${q.id}"] .chip[data-v="${ea(q.noneOpt)}"]`).forEach(c=>c.classList.remove('selected'));
+            answers[q.id]=answers[q.id].filter(x=>x!==q.noneOpt);
+          }
+          const already=answers[q.id].includes(v);
+          if(!already && q.maxSel && answers[q.id].length>=q.maxSel) return;
+          el.classList.toggle('selected');
+          const idx=answers[q.id].indexOf(v);
+          if(idx>-1) answers[q.id].splice(idx,1); else answers[q.id].push(v);
+        }
+        const cnt=document.getElementById(`cnt-${q.id}`);
+        if(cnt&&q.maxSel) cnt.textContent=answers[q.id].length+' / '+q.maxSel+' selecionados';
+        hideErr();
+      });
+    });
+  }
+  // vis cards
+  if(q.type==='viscard'){
+    document.querySelectorAll(`.vis-wrap[data-qid="${q.id}"] .vc`).forEach(el=>{
+      el.addEventListener('click',()=>{
+        setA(q.id, el.dataset.v);
+        document.querySelectorAll(`.vis-wrap[data-qid="${q.id}"] .vc`).forEach(e=>e.classList.remove('selected'));
+        el.classList.add('selected');
+        hideErr();
+        setTimeout(goNext, 360);
+      });
+    });
+  }
+  // rank
+  if(q.type==='rank') initRank(q.id);
+}
+
+function setA(id, v){ answers[id]=v; }
+function pickScale(id, v, btn){
+  answers[id]=v;
+  document.querySelectorAll(`.sc-btn[data-qid="${id}"]`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); hideErr();
+  setTimeout(goNext, 400);
+}
+
+// ════════════════════════════════════════════════════
+//  RANK DRAG + ARROWS
+// ════════════════════════════════════════════════════
+function initRank(qid){
+  const list=document.getElementById(`rk-${qid}`);
+  if(!list) return;
+
+  // arrow buttons
+  list.querySelectorAll('.rk-arrow').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const item=btn.closest('.rank-item');
+      const dir=parseInt(btn.dataset.d);
+      const items=[...list.querySelectorAll('.rank-item')];
+      const idx=items.indexOf(item);
+      const newIdx=idx+dir;
+      if(newIdx<0||newIdx>=items.length) return;
+      if(dir===1) items[newIdx].after(item); else items[newIdx].before(item);
+      updateRankNums(list,qid);
+    });
+  });
+
+  // mouse drag
+  let dragged=null;
+  list.querySelectorAll('.rank-item').forEach(item=>{
+    item.addEventListener('dragstart',()=>{ dragged=item; setTimeout(()=>item.classList.add('dragging'),0); });
+    item.addEventListener('dragend',()=>{ item.classList.remove('dragging'); dragged=null; updateRankNums(list,qid); });
+    item.addEventListener('dragover',e=>{ e.preventDefault(); item.classList.add('over');
+      if(dragged&&dragged!==item){
+        const all=[...list.querySelectorAll('.rank-item')];
+        all.indexOf(dragged)<all.indexOf(item) ? item.after(dragged) : item.before(dragged);
+      }
+    });
+    item.addEventListener('dragleave',()=>item.classList.remove('over'));
+    item.addEventListener('drop',e=>{ e.preventDefault(); item.classList.remove('over'); });
+  });
+
+  // touch drag
+  let tItem=null, tStartY=0;
+  list.querySelectorAll('.rank-item').forEach(item=>{
+    item.addEventListener('touchstart',e=>{ tItem=item; tStartY=e.touches[0].clientY; item.classList.add('dragging'); },{passive:true});
+    item.addEventListener('touchmove',e=>{
+      if(!tItem) return; e.preventDefault();
+      const y=e.touches[0].clientY;
+      const all=[...list.querySelectorAll('.rank-item')];
+      const target=all.find(el=>{ if(el===tItem) return false; const r=el.getBoundingClientRect(); return y>=r.top&&y<=r.bottom; });
+      if(target){ all.indexOf(tItem)<all.indexOf(target)?target.after(tItem):target.before(tItem); updateRankNums(list,qid); }
+    },{passive:false});
+    item.addEventListener('touchend',()=>{ if(tItem) tItem.classList.remove('dragging'); tItem=null; });
+  });
+
+  updateRankNums(list,qid);
+}
+
+function updateRankNums(list,qid){
+  const items=[...list.querySelectorAll('.rank-item')];
+  items.forEach((it,i)=>it.querySelector('.rk-num').textContent=i+1);
+  rankOrders[qid]=items.map(it=>it.dataset.ri);
+  answers[qid]=[...rankOrders[qid]];
+}
+
+// ════════════════════════════════════════════════════
+//  KEYBOARD
+// ════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement?.tagName;
+  if(['TEXTAREA','SELECT','INPUT'].includes(tag)) return;
+  if(e.key==='Enter'&&!document.getElementById('s-q').classList.contains('hidden')) goNext();
+});
+</script>
+</body>
+</html>
