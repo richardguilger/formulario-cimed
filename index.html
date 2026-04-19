@@ -232,7 +232,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="thanks-emoji">💛</div>
     <div class="thanks-title">Muito obrigado!</div>
     <div class="thanks-bar"></div>
-    <p class="thanks-p">Suas respostas contribuem diretamente para esta pesquisa acadêmica sobre percepção de marcas farmacêuticas no Brasil.</p>
+    <p class="thanks-p"></p>
     <div class="thanks-foot">Centro Universitário SENAC · Administração · 2026</div>
   </div>
 </div>
@@ -489,7 +489,7 @@ async function showThanks(){
     if (error) throw error;
     
     title.innerText = 'Muito obrigado!';
-    p.innerHTML = 'Suas respostas foram salvas com sucesso em nosso banco de dados na nuvem. Elas contribuem diretamente para esta pesquisa acadêmica sobre percepção de marcas farmacêuticas no Brasil.';
+    p.innerHTML = '';
   } catch (err) {
     title.innerText = 'Ops, um erro ocorreu!';
     title.style.color = '#ff6b6b';
