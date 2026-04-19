@@ -109,7 +109,6 @@
     // Configurações do Supabase
     const supabaseUrl = 'https://nnntghaltqsbzwkuohzn.supabase.co/';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubnRnaGFsdHFzYnp3a3VvaHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzEzNDQsImV4cCI6MjA5MjIwNzM0NH0.6wjDPFa8LgHLBxYH_OAxCUhaArX1m9VmNcGis5INMdA';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     // Dicionário de chaves amigas para as respostas
     const questionLabels = {
@@ -153,7 +152,8 @@
       tbody.innerHTML = '<tr><td colspan="3" class="loading">Baixando respostas detalhadas do Supabase...</td></tr>';
       
       try {
-        const { data, error } = await supabase.from('responses').select('*').order('created_at', { ascending: false });
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const { data, error } = await supabaseClient.from('responses').select('*').order('created_at', { ascending: false });
         if (error) {
           throw new Error(error.message);
         }
