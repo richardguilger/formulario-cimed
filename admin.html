@@ -6,19 +6,44 @@
   <title>Admin - Pesquisa CIMED</title>
   <style>
     :root {
-      --primary: #f2e024;
-      --primary-dim: rgba(242, 224, 36, 0.15);
-      --bg: #0f1115;
-      --surface: #1a1d24;
-      --surface2: #252a33;
-      --text: #f0f0f0;
-      --text-muted: #a0a5b1;
-      --border: #333a47;
+      --primary: #f2e024; --primary-dim: rgba(242, 224, 36, 0.15);
+      --bg: #0f1115; --surface: #1a1d24; --surface2: #252a33;
+      --text: #f0f0f0; --text-muted: #a0a5b1; --border: #333a47;
     }
     body {
       margin: 0; font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg); color: var(--text); padding: 20px;
+      background: var(--bg); color: var(--text); 
     }
+    .wrapper { padding: 20px; }
+
+    /* Login Screen */
+    #login-screen {
+      position: fixed; inset: 0; background: var(--bg); display: flex; 
+      align-items: center; justify-content: center; z-index: 999;
+    }
+    .login-box {
+      background: var(--surface); padding: 40px; border-radius: 16px; 
+      border: 1px solid var(--border); width: 100%; max-width: 340px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .login-box h2 { margin-top: 0; margin-bottom: 8px; color: var(--primary); }
+    .login-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .login-box input {
+      width: 100%; padding: 14px; margin-bottom: 12px; background: var(--bg); 
+      border: 1px solid var(--border); border-radius: 8px; color: var(--text); 
+      outline: none; font-size: 14px; box-sizing: border-box;
+    }
+    .login-box input:focus { border-color: var(--primary); }
+    .login-box button {
+      width: 100%; padding: 14px; background: var(--primary); color: #000; 
+      border: none; border-radius: 8px; font-weight: 800; cursor: pointer; 
+      font-size: 15px; margin-top: 10px; transition: transform 0.1s;
+    }
+    .login-box button:active { transform: scale(0.98); }
+    #login-err { color: #ff6b6b; font-size: 12px; margin-top: 14px; display: none; }
+
+    /* Main App */
+    #app-screen { display: none; }
     .header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
@@ -27,55 +52,113 @@
     .stats { color: var(--primary); font-size: 14px; font-weight: bold; background: var(--primary-dim); padding: 4px 12px; border-radius: 20px;}
     .table-container { overflow-x: auto; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-    th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    th, td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
     th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
     tr:last-child td { border-bottom: none; }
-    tr:hover { background: rgba(255,255,255,0.02); }
-    .td-id { color: var(--text-muted); width: 50px; }
-    .td-date { color: var(--primary); width: 150px; }
-    .ans-box { 
-      background: var(--surface2); padding: 8px; border-radius: 6px; 
-      max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; color: #d1d5db; white-space: pre-wrap; 
-    }
+    .td-id { color: var(--text-muted); width: 60px; font-family: monospace; }
+    .td-date { color: var(--primary); width: 160px; font-weight: 500; }
     .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+
+    /* Formatted Answers */
+    .ans-grid { display: flex; flex-direction: column; gap: 6px; }
+    .ans-item { padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 3px solid var(--border); }
+    .ans-item:hover { border-color: var(--primary); background: rgba(255,255,255,0.04); }
+    .ans-key { color: var(--text-muted); font-weight: 600; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ans-val { color: #fff; font-size: 13px; font-weight: 500; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>Painel de Respostas - Grupo CIMED</h1>
-    <div class="stats" id="totalCount">Carregando...</div>
+  <!-- LOGIN OVERLAY -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>🔐 Acesso Restrito</h2>
+      <p>Área exclusiva para administradores da CIMED.</p>
+      <input type="text" id="userInp" placeholder="Usuário" autocomplete="off" />
+      <input type="password" id="passInp" placeholder="Senha" />
+      <button onclick="tryLogin()">Entrar</button>
+      <div id="login-err">Usuário ou senha incorretos!</div>
+    </div>
   </div>
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Data/Hora</th>
-          <th>Respostas (JSON)</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        <tr><td colspan="3" class="loading">Buscando dados da API...</td></tr>
-      </tbody>
-    </table>
+  <!-- DASHBOARD -->
+  <div id="app-screen" class="wrapper">
+    <div class="header">
+      <h1>Painel de Respostas - Grupo CIMED</h1>
+      <div class="stats" id="totalCount">Carregando...</div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data e Hora</th>
+            <th>Respostas Organizadas</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="3" class="loading">Iniciando comunicação com a nuvem...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // Configurações do Supabase
     const supabaseUrl = 'https://nnntghaltqsbzwkuohzn.supabase.co/';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubnRnaGFsdHFzYnp3a3VvaHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzEzNDQsImV4cCI6MjA5MjIwNzM0NH0.6wjDPFa8LgHLBxYH_OAxCUhaArX1m9VmNcGis5INMdA';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+    // Dicionário de chaves amigas para as respostas
+    const questionLabels = {
+      age: "Idade", gender: "Gênero", edu: "Escolaridade", state: "Região SP",
+      income: "Renda", know_cimed: "Conhece a Cimed?", how_cimed: "Como conheceu",
+      cimed_mind: "Associação de Marca", generic_brand: "Genérico espontâneo",
+      rank_gen: "Ranking de Genéricos", otc_prod: "Produtos (OTC) usados",
+      otc_vis: "Identidade Visual (Medicamento)", lik_price: "Preço Acessível (1-5)",
+      lik_qual: "Qualidade confiável (1-5)", lik_pack: "Reconhecimento da embalagem (1-5)",
+      lik_pref: "Preferência sobre Referência (1-5)", know_carmed: "Conhece a Carmed?",
+      how_carmed: "Onde conheceu Carmed", fini_inf: "Influência Carmed x Fini (1-5)",
+      carmed_vis: "Visual Hidratante labial", rank_lip: "Fatores de compra (Hidratante)",
+      has_kids: "Tem filhos?", know_jm: "Conhece João e Maria", baby_vis: "Visual Higiene Infantil",
+      know_super: "Conhece a marca Super?", oral_vis: "Visual Higiene Bucal",
+      bbb_super: "Influência patrocínio BBB (1-5)", adj: "Adjetivos (Cimed)",
+      digital: "Presença Digital (1-5)", nps: "Nota NPS (0-10)", rank_trust: "Fatores Confiança"
+    };
+
+    // Sistema de Login Manual Solicitado
+    function tryLogin() {
+      const u = document.getElementById('userInp').value;
+      const p = document.getElementById('passInp').value;
+      
+      if (u === 'cimedforever' && p === '6adm') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        loadData(); // Só chama o Supabase DEPOIS de logar
+      } else {
+        document.getElementById('login-err').style.display = 'block';
+      }
+    }
+
+    // Permitir "Enter" no teclado para logar
+    document.getElementById('passInp').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') tryLogin();
+    });
+
+    // Função Principal de resgate
     async function loadData() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '<tr><td colspan="3" class="loading">Baixando respostas detalhadas do Supabase...</td></tr>';
+      
       try {
         const { data, error } = await supabase.from('responses').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
+        if (error) {
+          throw new Error(error.message);
+        }
         
-        document.getElementById('totalCount').innerText = `${data.length} Envios Registrados`;
-        
-        const tbody = document.getElementById('tableBody');
+        document.getElementById('totalCount').innerText = `${data.length} Envios Organizados`;
         tbody.innerHTML = '';
 
         if(data.length === 0) {
@@ -85,20 +168,43 @@
 
         data.forEach(row => {
           const tr = document.createElement('tr');
-          const date = new Date(row.created_at).toLocaleString('pt-BR');
+          
+          // Formata Data amigável
+          const dateObj = new Date(row.created_at);
+          const dateStr = dateObj.toLocaleDateString('pt-BR') + ' às ' + dateObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+          
+          // Renderiza a Organização
+          let itemsHtml = '<div class="ans-grid">';
+          
+          Object.keys(row.answers).forEach(key => {
+            const humanLabel = questionLabels[key] || key;
+            const val = row.answers[key];
+            
+            // Formatando arrays para não aparecerem chapados
+            const displayVal = Array.isArray(val) ? val.join(' • ') : val;
+            
+            itemsHtml += `
+              <div class="ans-item">
+                <div class="ans-key">${humanLabel}</div>
+                <div class="ans-val">${displayVal}</div>
+              </div>
+            `;
+          });
+          itemsHtml += '</div>';
+
           tr.innerHTML = `
             <td class="td-id">#${row.id}</td>
-            <td class="td-date">${date}</td>
-            <td><div class="ans-box">${JSON.stringify(row.answers, null, 2)}</div></td>
+            <td class="td-date">${dateStr}</td>
+            <td>${itemsHtml}</td>
           `;
           tbody.appendChild(tr);
         });
       } catch (err) {
-        document.getElementById('tableBody').innerHTML = `<tr><td colspan="3" class="loading" style="color:#ff6b6b">Erro: Verifique se a tabela 'responses' foi criada no Supabase e se o acesso foi habilitado.<br>${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" class="loading" style="color:#ff6b6b">
+          Erro crítico detectado: ${err.message}. <br>Verifique RLS e acesso.
+        </td></tr>`;
       }
     }
-    
-    loadData();
   </script>
 </body>
 </html>
