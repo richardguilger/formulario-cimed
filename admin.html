@@ -130,8 +130,8 @@
 
     // Sistema de Login Manual Solicitado
     function tryLogin() {
-      const u = document.getElementById('userInp').value;
-      const p = document.getElementById('passInp').value;
+      const u = document.getElementById('userInp').value.trim().toLowerCase();
+      const p = document.getElementById('passInp').value.trim();
       
       if (u === 'cimedforever' && p === '6adm') {
         document.getElementById('login-screen').style.display = 'none';
