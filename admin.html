@@ -131,7 +131,7 @@
     // Sistema de Login Manual Solicitado
     function tryLogin() {
       const u = document.getElementById('userInp').value.trim().toLowerCase();
-      const p = document.getElementById('passInp').value.trim();
+      const p = document.getElementById('passInp').value.trim().toLowerCase();
       
       if (u === 'cimed6adm' && p === 'cimed6adm') {
         document.getElementById('login-screen').style.display = 'none';
