@@ -182,6 +182,18 @@
     .text-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
     .text-list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
     
+    .btn-export {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--primary); color: #000; border: none;
+      border-radius: 12px; padding: 12px 22px; font-size: 14px;
+      font-weight: 800; font-family: 'Inter', sans-serif; cursor: pointer;
+      text-decoration: none; transition: background 0.15s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-export:hover { background: #ffe600; transform: translateY(-2px); }
+    .btn-export:active { transform: scale(0.97); }
+    .btn-export svg { flex-shrink: 0; }
+
     @media (max-width: 768px) {
       .header-container { flex-direction: column; align-items: flex-start; gap: 16px; }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -209,6 +221,10 @@
         <h1>Dashboard CIMED 2026</h1>
         <p>Análise em tempo real de percepção de marca e hábitos de consumo.</p>
       </div>
+      <button class="btn-export" id="btnExport" onclick="exportarRespostas()" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar Respostas (.xlsx)
+      </button>
     </div>
 
     <div class="overview-grid" id="overview" style="display: none;">
@@ -243,10 +259,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
     Chart.register(ChartDataLabels);
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // Armazena os dados carregados globalmente para exportação
+    let allResponseData = [];
 
     const supabaseUrl = 'https://nnntghaltqsbzwkuohzn.supabase.co/';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubnRnaGFsdHFzYnp3a3VvaHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzEzNDQsImV4cCI6MjA5MjIwNzM0NH0.6wjDPFa8LgHLBxYH_OAxCUhaArX1m9VmNcGis5INMdA';
@@ -329,10 +349,87 @@
 
         populateOverview(data);
         processDataAndRenderCharts(data);
+        // Guarda dados e mostra botão de exportação
+        allResponseData = data;
+        document.getElementById('btnExport').style.display = 'inline-flex';
       } catch (err) {
         loading.innerHTML = `<span style="color:#ff5f5f">Erro crítico detectado: ${err.message}</span>`;
       }
     }
+
+    // Mapa de labels legíveis para exportação
+    const exportLabels = {
+      age: 'Faixa Etária',
+      gender: 'Gênero',
+      edu: 'Escolaridade',
+      state: 'Região SP',
+      income: 'Renda Familiar',
+      know_cimed: 'Conhece a Cimed?',
+      how_cimed: 'Como conheceu a Cimed',
+      cimed_mind: 'Associação de Marca (Texto)',
+      generic_brand: 'Genérico Espontâneo',
+      rank_gen: 'Ranking de Genéricos (Ordem)',
+      otc_prod: 'Produtos OTC Utilizados',
+      otc_vis: 'Visual Preferido (Medicamentos)',
+      lik_price: 'Preço Acessível (1-5)',
+      lik_qual: 'Confiança na Qualidade (1-5)',
+      lik_pack: 'Reconhece Embalagem (1-5)',
+      lik_pref: 'Prefere Cimed ao Referência (1-5)',
+      know_carmed: 'Conhece a Carmed?',
+      how_carmed: 'Onde conheceu Carmed',
+      fini_inf: 'Influência Carmed x Fini (1-5)',
+      carmed_vis: 'Visual Hidratante Labial Preferido',
+      rank_lip: 'Fatores de Compra - Hidratante (Ordem)',
+      has_kids: 'Tem filhos/cuida de crianças?',
+      know_jm: 'Conhece João e Maria?',
+      baby_vis: 'Visual Baby Care Preferido',
+      know_super: 'Conhece a marca Super?',
+      oral_vis: 'Visual Higiene Bucal Preferido',
+      bbb_super: 'Influência BBB - Super (1-5)',
+      adj: 'Adjetivos - Cimed (múltipla escolha)',
+      digital: 'Presença Digital (1-5)',
+      nps: 'NPS - Recomendaria? (0-10)',
+      rank_trust: 'Fatores de Confiança (Ordem)'
+    };
+
+    function formatExportValue(val) {
+      if (val === null || val === undefined || val === '') return '';
+      if (Array.isArray(val)) return val.join(' → ');
+      return String(val);
+    }
+
+    function exportarRespostas() {
+      if (!allResponseData || allResponseData.length === 0) {
+        alert('Nenhum dado disponível para exportação.');
+        return;
+      }
+
+      const fieldOrder = Object.keys(exportLabels);
+      const header = ['#', 'Data e Hora', ...fieldOrder.map(k => exportLabels[k])];
+
+      const rows = allResponseData.map((row, i) => {
+        const ans = row.answers || {};
+        const date = row.created_at
+          ? new Date(row.created_at).toLocaleString('pt-BR')
+          : '';
+        return [
+          i + 1,
+          date,
+          ...fieldOrder.map(k => formatExportValue(ans[k]))
+        ];
+      });
+
+      const wsData = [header, ...rows];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!cols'] = header.map((h, i) => ({ wch: i === 0 ? 4 : i === 1 ? 20 : Math.max(h.length + 2, 22) }));
+      XLSX.utils.book_append_sheet(wb, ws, 'Respostas CIMED');
+
+      const now = new Date();
+      const stamp = `${now.getDate()}-${now.getMonth()+1}-${now.getFullYear()}`;
+      XLSX.writeFile(wb, `respostas_cimed_${stamp}.xlsx`);
+    }
+
 
     function populateOverview(rows) {
       document.getElementById('stat-total').innerText = rows.length;
