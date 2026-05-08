@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Pesquisa CIMED</title>
+  <title>Admin - Pesquisa CIMED (Dashboard Analítico)</title>
   <style>
     :root {
       --primary: #f2e024; --primary-dim: rgba(242, 224, 36, 0.15);
@@ -14,7 +14,7 @@
       margin: 0; font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg); color: var(--text); 
     }
-    .wrapper { padding: 20px; }
+    .wrapper { padding: 20px; max-width: 1400px; margin: 0 auto; }
 
     /* Login Screen */
     #login-screen {
@@ -49,22 +49,74 @@
       margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
     }
     h1 { margin: 0; font-size: 20px; font-weight: 600; }
-    .stats { color: var(--primary); font-size: 14px; font-weight: bold; background: var(--primary-dim); padding: 4px 12px; border-radius: 20px;}
-    .table-container { overflow-x: auto; background: var(--surface); border-radius: 12px; border: 1px solid var(--border); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-    th, td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    tr:last-child td { border-bottom: none; }
-    .td-id { color: var(--text-muted); width: 60px; font-family: monospace; }
-    .td-date { color: var(--primary); width: 160px; font-weight: 500; }
-    .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+    .stats { color: var(--primary); font-size: 14px; font-weight: bold; background: var(--primary-dim); padding: 6px 14px; border-radius: 20px;}
+    
+    .loading-app { text-align: center; padding: 60px; color: var(--text-muted); font-size: 16px; display: none; }
 
-    /* Formatted Answers */
-    .ans-grid { display: flex; flex-direction: column; gap: 6px; }
-    .ans-item { padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 3px solid var(--border); }
-    .ans-item:hover { border-color: var(--primary); background: rgba(255,255,255,0.04); }
-    .ans-key { color: var(--text-muted); font-weight: 600; margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ans-val { color: #fff; font-size: 13px; font-weight: 500; }
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+    }
+    
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .chart-card h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 600;
+      line-height: 1.4;
+      min-height: 42px;
+    }
+    .chart-container {
+      flex: 1;
+      position: relative;
+      min-height: 250px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Text Responses List */
+    .text-list {
+      max-height: 250px;
+      overflow-y: auto;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border);
+    }
+    .text-item {
+      font-size: 13px;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+      line-height: 1.4;
+    }
+    .text-list::-webkit-scrollbar { width: 6px; }
+    .text-list::-webkit-scrollbar-track { background: var(--surface2); }
+    .text-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    
+    @media (max-width: 768px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -84,50 +136,77 @@
   <!-- DASHBOARD -->
   <div id="app-screen" class="wrapper">
     <div class="header">
-      <h1>Painel de Respostas - Grupo CIMED</h1>
-      <div class="stats" id="totalCount">Carregando...</div>
+      <h1>Painel Analítico - Grupo CIMED</h1>
+      <div class="stats" id="totalCount">Carregando dados...</div>
     </div>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Data e Hora</th>
-            <th>Respostas Organizadas</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="3" class="loading">Iniciando comunicação com a nuvem...</td></tr>
-        </tbody>
-      </table>
+    <div id="loadingApp" class="loading-app">Baixando e processando respostas da nuvem...</div>
+
+    <div class="dashboard-grid" id="dashboard">
+      <!-- Os gráficos serão inseridos aqui via JS -->
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <script>
+    Chart.register(ChartDataLabels);
+    Chart.defaults.color = '#a0a5b1';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
     // Configurações do Supabase
     const supabaseUrl = 'https://nnntghaltqsbzwkuohzn.supabase.co/';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubnRnaGFsdHFzYnp3a3VvaHpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MzEzNDQsImV4cCI6MjA5MjIwNzM0NH0.6wjDPFa8LgHLBxYH_OAxCUhaArX1m9VmNcGis5INMdA';
 
-    // Dicionário de chaves amigas para as respostas
-    const questionLabels = {
-      age: "Idade", gender: "Gênero", edu: "Escolaridade", state: "Região SP",
-      income: "Renda", know_cimed: "Conhece a Cimed?", how_cimed: "Como conheceu",
-      cimed_mind: "Associação de Marca", generic_brand: "Genérico espontâneo",
-      rank_gen: "Ranking de Genéricos", otc_prod: "Produtos (OTC) usados",
-      otc_vis: "Identidade Visual (Medicamento)", lik_price: "Preço Acessível (1-5)",
-      lik_qual: "Qualidade confiável (1-5)", lik_pack: "Reconhecimento da embalagem (1-5)",
-      lik_pref: "Preferência sobre Referência (1-5)", know_carmed: "Conhece a Carmed?",
-      how_carmed: "Onde conheceu Carmed", fini_inf: "Influência Carmed x Fini (1-5)",
-      carmed_vis: "Visual Hidratante labial", rank_lip: "Fatores de compra (Hidratante)",
-      has_kids: "Tem filhos?", know_jm: "Conhece João e Maria", baby_vis: "Visual Higiene Infantil",
-      know_super: "Conhece a marca Super?", oral_vis: "Visual Higiene Bucal",
-      bbb_super: "Influência patrocínio BBB (1-5)", adj: "Adjetivos (Cimed)",
-      digital: "Presença Digital (1-5)", nps: "Nota NPS (0-10)", rank_trust: "Fatores Confiança"
-    };
+    // Definição das Perguntas para o Dashboard
+    const dashboardQuestions = [
+      { id: 'age', title: '1.1 Faixa Etária', type: 'pie' },
+      { id: 'gender', title: '1.2 Gênero', type: 'pie' },
+      { id: 'edu', title: '1.3 Escolaridade', type: 'pie' },
+      { id: 'state', title: '1.4 Região SP', type: 'pie' },
+      { id: 'income', title: '1.5 Renda Familiar', type: 'pie' },
+      
+      { id: 'know_cimed', title: '2.1 Conhece a Cimed?', type: 'pie' },
+      { id: 'how_cimed', title: '2.2 Como conheceu a Cimed', type: 'bar_horizontal' },
+      { id: 'generic_brand', title: '2.4 Genérico Espontâneo', type: 'pie' },
+      { id: 'rank_gen', title: '2.5 Ranking de Genéricos (Votos em 1º Lugar)', type: 'bar' },
+      { id: 'cimed_mind', title: '2.3 Associação de Marca (Texto)', type: 'text' },
+      
+      { id: 'otc_prod', title: '3.1 Produtos OTC Cimed Conhecidos', type: 'bar_horizontal' },
+      { id: 'otc_vis', title: '3.2 Identidade Visual (Medicamentos)', type: 'pie' },
+      { id: 'lik_price', title: '3.3a Preço Acessível (1 a 5)', type: 'bar' },
+      { id: 'lik_qual', title: '3.3b Qualidade Confiável (1 a 5)', type: 'bar' },
+      { id: 'lik_pack', title: '3.3c Reconhecimento da Embalagem (1 a 5)', type: 'bar' },
+      { id: 'lik_pref', title: '3.3d Preferência sobre Referência (1 a 5)', type: 'bar' },
+      
+      { id: 'know_carmed', title: '4.1 Conhece a Carmed?', type: 'pie' },
+      { id: 'how_carmed', title: '4.2 Onde conheceu Carmed', type: 'bar_horizontal' },
+      { id: 'fini_inf', title: '4.3 Influência Carmed x Fini (1 a 5)', type: 'bar' },
+      { id: 'carmed_vis', title: '4.4 Visual Hidratante Labial', type: 'pie' },
+      { id: 'rank_lip', title: '4.5 Fatores de Compra Carmed (Votos em 1º Lugar)', type: 'bar_horizontal' },
+      
+      { id: 'has_kids', title: '5.1 Tem filhos / cuida de crianças?', type: 'pie' },
+      { id: 'know_jm', title: '5.2 Conhece João e Maria?', type: 'pie' },
+      { id: 'baby_vis', title: '5.3 Visual Higiene Infantil', type: 'pie' },
+      { id: 'know_super', title: '5.4 Conhece a marca Super?', type: 'pie' },
+      { id: 'oral_vis', title: '5.5 Visual Higiene Bucal', type: 'pie' },
+      { id: 'bbb_super', title: '5.6 Influência patrocínio BBB (1 a 5)', type: 'bar' },
+      
+      { id: 'adj', title: '6.1 Adjetivos Associados à Cimed', type: 'bar_horizontal' },
+      { id: 'digital', title: '6.2 Presença Digital (1 a 5)', type: 'bar' },
+      { id: 'nps', title: '6.3 Nota NPS (0 a 10)', type: 'bar' },
+      { id: 'rank_trust', title: '6.4 Fatores de Confiança (Votos em 1º Lugar)', type: 'bar_horizontal' }
+    ];
 
-    // Sistema de Login Manual Solicitado
+    // Paleta de cores para gráficos
+    const colorPalette = [
+      '#f2e024', '#ff5f5f', '#3ecf8e', '#ec4899', '#06b6d4', 
+      '#8b5cf6', '#f97316', '#a855f7', '#14b8a6', '#f43f5e',
+      '#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#84cc16'
+    ];
+
     function tryLogin() {
       const u = document.getElementById('userInp').value.trim().toLowerCase();
       const p = document.getElementById('passInp').value.trim().toLowerCase();
@@ -135,75 +214,198 @@
       if (u === 'cimed6adm' && p === 'cimed6adm') {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app-screen').style.display = 'block';
-        loadData(); // Só chama o Supabase DEPOIS de logar
+        loadData();
       } else {
         document.getElementById('login-err').style.display = 'block';
       }
     }
 
-    // Permitir "Enter" no teclado para logar
     document.getElementById('passInp').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') tryLogin();
     });
 
-    // Função Principal de resgate
     async function loadData() {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '<tr><td colspan="3" class="loading">Baixando respostas detalhadas do Supabase...</td></tr>';
+      const dashboard = document.getElementById('dashboard');
+      const loading = document.getElementById('loadingApp');
+      dashboard.innerHTML = '';
+      loading.style.display = 'block';
       
       try {
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        const { data, error } = await supabaseClient.from('responses').select('*').order('created_at', { ascending: false });
-        if (error) {
-          throw new Error(error.message);
-        }
+        const { data, error } = await supabaseClient.from('responses').select('answers');
+        if (error) throw new Error(error.message);
         
-        document.getElementById('totalCount').innerText = `${data.length} Envios Organizados`;
-        tbody.innerHTML = '';
+        document.getElementById('totalCount').innerText = `${data.length} Respostas Registradas`;
+        loading.style.display = 'none';
 
         if(data.length === 0) {
-           tbody.innerHTML = '<tr><td colspan="3" class="loading">Nenhuma reposta registrada ainda na nuvem.</td></tr>';
+           dashboard.innerHTML = '<div class="loading-app" style="display:block">Nenhuma resposta registrada ainda.</div>';
            return;
         }
 
-        data.forEach(row => {
-          const tr = document.createElement('tr');
-          
-          // Formata Data amigável
-          const dateObj = new Date(row.created_at);
-          const dateStr = dateObj.toLocaleDateString('pt-BR') + ' às ' + dateObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-          
-          // Renderiza a Organização
-          let itemsHtml = '<div class="ans-grid">';
-          
-          Object.keys(row.answers).forEach(key => {
-            const humanLabel = questionLabels[key] || key;
-            const val = row.answers[key];
-            
-            // Formatando arrays para não aparecerem chapados
-            const displayVal = Array.isArray(val) ? val.join(' • ') : val;
-            
-            itemsHtml += `
-              <div class="ans-item">
-                <div class="ans-key">${humanLabel}</div>
-                <div class="ans-val">${displayVal}</div>
-              </div>
-            `;
-          });
-          itemsHtml += '</div>';
-
-          tr.innerHTML = `
-            <td class="td-id">#${row.id}</td>
-            <td class="td-date">${dateStr}</td>
-            <td>${itemsHtml}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        processDataAndRenderCharts(data);
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="3" class="loading" style="color:#ff6b6b">
-          Erro crítico detectado: ${err.message}. <br>Verifique RLS e acesso.
-        </td></tr>`;
+        loading.innerHTML = `<span style="color:#ff6b6b">Erro crítico detectado: ${err.message}</span>`;
       }
+    }
+
+    function processDataAndRenderCharts(rows) {
+      const dashboard = document.getElementById('dashboard');
+      
+      dashboardQuestions.forEach(q => {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<h3>${q.title}</h3><div class="chart-container" id="container-${q.id}"></div>`;
+        dashboard.appendChild(card);
+
+        // Agregação de dados
+        let counts = {};
+        let texts = [];
+
+        rows.forEach(row => {
+          const ans = row.answers && row.answers[q.id];
+          if (ans === undefined || ans === null || ans === '') return;
+
+          if (q.type === 'pie' || q.type === 'bar' || q.type === 'bar_horizontal') {
+             // Caso a resposta seja array (multi-escolha) ou rank
+             if (Array.isArray(ans)) {
+                if (q.title.includes('1º Lugar')) {
+                   // Pega apenas o primeiro item do ranking
+                   if (ans.length > 0) counts[ans[0]] = (counts[ans[0]] || 0) + 1;
+                } else {
+                   // Multi-escolha padrão
+                   ans.forEach(val => { counts[val] = (counts[val] || 0) + 1; });
+                }
+             } else {
+                // Radio, scale, viscard (resposta unica)
+                counts[ans] = (counts[ans] || 0) + 1;
+             }
+          } else if (q.type === 'text') {
+             texts.push(ans);
+          }
+        });
+
+        // Renderização
+        const container = document.getElementById(`container-${q.id}`);
+        
+        if (q.type === 'text') {
+          if (texts.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Sem respostas</div>';
+          } else {
+            const listHtml = texts.map(t => `<div class="text-item">${escapeHtml(t)}</div>`).join('');
+            container.innerHTML = `<div class="text-list">${listHtml}</div>`;
+          }
+        } else {
+          // Prepara dados para Chart.js
+          const labels = Object.keys(counts).sort((a, b) => {
+             // Tentar ordenar numericamente se for escala
+             const numA = parseFloat(a);
+             const numB = parseFloat(b);
+             if(!isNaN(numA) && !isNaN(numB)) return numA - numB;
+             return counts[b] - counts[a]; // Ordem descrescente
+          });
+          
+          const dataValues = labels.map(l => counts[l]);
+          
+          if (labels.length === 0) {
+             container.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Sem respostas</div>';
+             return;
+          }
+
+          const canvas = document.createElement('canvas');
+          container.appendChild(canvas);
+
+          let chartConfig = getChartConfig(q.type, labels, dataValues, rows.length);
+          new Chart(canvas, chartConfig);
+        }
+      });
+    }
+
+    function getChartConfig(type, labels, dataValues, totalResponses) {
+      const bgColors = labels.map((_, i) => colorPalette[i % colorPalette.length]);
+
+      const dataConfig = {
+        labels: labels,
+        datasets: [{
+          data: dataValues,
+          backgroundColor: type === 'pie' ? bgColors : colorPalette[0],
+          borderWidth: 0,
+          borderRadius: type !== 'pie' ? 4 : 0
+        }]
+      };
+
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: type === 'pie',
+            position: 'right',
+            labels: { color: '#f0f0f0', font: { size: 11 }, boxWidth: 12 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let value = context.raw;
+                let perc = ((value / totalResponses) * 100).toFixed(1);
+                return ` ${value} resp. (${perc}%)`;
+              }
+            }
+          },
+          datalabels: {
+            color: type === 'pie' ? '#000' : '#f0f0f0',
+            font: { weight: 'bold', size: 11 },
+            formatter: (value) => {
+               if (type === 'pie') {
+                  let perc = Math.round((value / totalResponses) * 100);
+                  return perc > 4 ? perc + '%' : ''; // Oculta se for muito pequeno
+               } else {
+                  return value;
+               }
+            },
+            anchor: type === 'pie' ? 'center' : 'end',
+            align: type === 'pie' ? 'center' : 'end',
+            offset: type === 'pie' ? 0 : 4
+          }
+        }
+      };
+
+      if (type !== 'pie') {
+        const isHoriz = type === 'bar_horizontal';
+        options.indexAxis = isHoriz ? 'y' : 'x';
+        options.scales = {
+          x: { 
+            grid: { color: 'rgba(255,255,255,0.05)' }, 
+            ticks: { color: '#a0a5b1' },
+            beginAtZero: true
+          },
+          y: { 
+            grid: { display: false }, 
+            ticks: { color: '#a0a5b1', font: { size: 11 } } 
+          }
+        };
+        options.layout = {
+           padding: {
+              right: isHoriz ? 30 : 0,
+              top: !isHoriz ? 20 : 0
+           }
+        }
+      }
+
+      return {
+        type: type === 'pie' ? 'doughnut' : 'bar',
+        data: dataConfig,
+        options: options
+      };
+    }
+
+    function escapeHtml(unsafe) {
+      return (unsafe || '').toString()
+           .replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#039;");
     }
   </script>
 </body>
